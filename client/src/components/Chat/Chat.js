@@ -8,17 +8,18 @@ let socket;
 const Chat=({location})=>{
     const [name, setName] = useState('');
     const [room, setRoom] = useState('');
+    const [users, setUsers] = useState('');
+    const [message, setMessage] = useState('');
+    const [messages, setMessages] = useState([]);
     const ENDPOINT = 'localhost:5000';
 
 
     useEffect(() => {
         const { name, room } = queryString.parse(location.search);
         // console.log(location.search)
-        // console.log(name)
-        // console.log(room)
+
         socket = io(ENDPOINT);
         // console.log(socket)
-
         setRoom(room);
         setName(name);
 
@@ -34,9 +35,36 @@ const Chat=({location})=>{
         }
     },[ENDPOINT, location.search]);
 
-    return(
-        <h1>Chat</h1>
-    )
+    useEffect(() => {
+        socket.on('message', message => {
+          setMessages([ ...messages, message ]);
+        });
+        
+        // socket.on("roomData", ({ users }) => {
+        //   setUsers(users);
+        // });
+    }, [messages]);
+
+    const sendMessage = (event) => {
+        event.preventDefault();
+    
+        if(message) {
+          socket.emit('sendMessage', message, () => setMessage(''));
+        }
+    }
+
+    console.log(message,messages);
+
+    return (
+        <div className="outerContainer">
+          <div className="container">
+              {/* <InfoBar room={room} />
+              <Messages messages={messages} name={name} /> */}
+              <input value={message} onChange={(event)=>setMessage(event.target.value)} onKeyPress={event=>event.key==='Enter'? sendMessage(event):null} />
+          </div>
+          {/* <TextContainer users={users}/> */}
+        </div>
+      );
 }
 
 export default Chat;
